@@ -1,0 +1,21 @@
+<group name="socbox,">
+  <rule id="100200" level="10">
+    <if_sid>5716</if_sid>
+    <frequency>10</frequency>
+    <timeframe>120</timeframe>
+    <same_source_ip />
+    <description>SOCBOX: SSH brute force (multiple failures)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <rule id="100210" level="10">
+    <decoded_as>web-accesslog</decoded_as>
+    <match>\b(union\s+select|or\s+1=1|/etc/passwd|\.\./\.\./|cmd=|powershell|base64,|%27\s*or\s*1%3d1)\b</match>
+    <description>SOCBOX: Web exploit attempt pattern</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+  </rule>
+</group>

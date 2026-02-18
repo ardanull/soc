@@ -1,0 +1,16 @@
+network.host: 0.0.0.0
+node.name: wazuh.indexer
+cluster.name: wazuh-cluster
+discovery.type: single-node
+plugins.security.ssl.transport.pemcert_filepath: certs/indexer.pem
+plugins.security.ssl.transport.pemkey_filepath: certs/indexer.key
+plugins.security.ssl.transport.pemtrustedcas_filepath: certs/root-ca.pem
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: certs/indexer.pem
+plugins.security.ssl.http.pemkey_filepath: certs/indexer.key
+plugins.security.ssl.http.pemtrustedcas_filepath: certs/root-ca.pem
+plugins.security.allow_default_init_securityindex: true
+plugins.security.authcz.admin_dn:
+  - CN=admin,OU=Wazuh,O=Wazuh,L=California,C=US
+plugins.security.nodes_dn:
+  - CN=wazuh.indexer,OU=Wazuh,O=Wazuh,L=California,C=US

@@ -1,0 +1,5 @@
+<decoder name="web-accesslog">
+  <prematch>^\S+ \S+ \S+ \[</prematch>
+  <regex>^(\S+) \S+ \S+ \[(.*?)\] "(\S+) (.*?) (HTTP\/\S+)" (\d{3}) (\S+) "(.*?)" "(.*?)"</regex>
+  <order>srcip,timestamp,method,url,protocol,status,size,referrer,agent</order>
+</decoder>

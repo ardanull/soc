@@ -1,0 +1,114 @@
+services:
+  wazuh.indexer:
+    image: wazuh/wazuh-indexer:${INDEXER_VERSION}
+    hostname: wazuh.indexer
+    restart: unless-stopped
+    environment:
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - wazuh-indexer-data:/var/lib/wazuh-indexer
+      - ./stack/certs/indexer:/usr/share/wazuh-indexer/certs:ro
+      - ./stack/config/indexer/opensearch.yml:/usr/share/wazuh-indexer/opensearch.yml:ro
+    ports:
+      - "9200:9200"
+    networks:
+      - socnet
+
+  wazuh.manager:
+    image: wazuh/wazuh-manager:${WAZUH_VERSION}
+    hostname: wazuh.manager
+    restart: unless-stopped
+    depends_on:
+      - wazuh.indexer
+    environment:
+      - INDEXER_URL=https://wazuh.indexer:9200
+      - INDEXER_USERNAME=admin
+      - INDEXER_PASSWORD=${INDEXER_ADMIN_PASS}
+      - FILEBEAT_SSL_VERIFICATION_MODE=full
+      - SSL_CERTIFICATE_AUTHORITIES=/etc/ssl/root-ca.pem
+      - SSL_CERTIFICATE=/etc/ssl/filebeat.pem
+      - SSL_KEY=/etc/ssl/filebeat.key
+      - API_USERNAME=${WAZUH_API_USER}
+      - API_PASSWORD=${WAZUH_API_PASS}
+    volumes:
+      - wazuh-manager-data:/var/ossec/data
+      - wazuh-manager-logs:/var/ossec/logs
+      - ./stack/certs/manager/root-ca.pem:/etc/ssl/root-ca.pem:ro
+      - ./stack/certs/manager/filebeat.pem:/etc/ssl/filebeat.pem:ro
+      - ./stack/certs/manager/filebeat.key:/etc/ssl/filebeat.key:ro
+      - ./stack/rules/local_rules.xml:/var/ossec/etc/rules/local_rules.xml:ro
+      - ./stack/decoders/local_decoder.xml:/var/ossec/etc/decoders/local_decoder.xml:ro
+    ports:
+      - "1514:1514/udp"
+      - "1515:1515"
+      - "55000:55000"
+    networks:
+      - socnet
+
+  wazuh.dashboard:
+    image: wazuh/wazuh-dashboard:${DASHBOARD_VERSION}
+    hostname: wazuh.dashboard
+    restart: unless-stopped
+    depends_on:
+      - wazuh.indexer
+      - wazuh.manager
+    environment:
+      - INDEXER_URL=https://wazuh.indexer:9200
+      - WAZUH_API_URL=https://wazuh.manager
+      - DASHBOARD_USERNAME=${WAZUH_API_USER}
+      - DASHBOARD_PASSWORD=${WAZUH_API_PASS}
+    volumes:
+      - ./stack/certs/dashboard:/usr/share/wazuh-dashboard/certs:ro
+      - ./stack/config/dashboard/opensearch_dashboards.yml:/usr/share/wazuh-dashboard/config/opensearch_dashboards.yml:ro
+    ports:
+      - "5601:5601"
+    networks:
+      - socnet
+
+  target.ssh:
+    build:
+      context: ./targets/linux-ssh
+    hostname: target.ssh
+    restart: unless-stopped
+    depends_on:
+      - wazuh.manager
+    environment:
+      - WAZUH_MANAGER=wazuh.manager
+      - WAZUH_AGENT_GROUP=linux-ssh
+      - TARGET_USER=victim
+      - TARGET_PASS=Winter2026!
+    ports:
+      - "2222:22"
+    networks:
+      - socnet
+
+  target.web:
+    build:
+      context: ./targets/web-nginx
+    hostname: target.web
+    restart: unless-stopped
+    depends_on:
+      - wazuh.manager
+    environment:
+      - WAZUH_MANAGER=wazuh.manager
+      - WAZUH_AGENT_GROUP=web-nginx
+    ports:
+      - "8080:80"
+    networks:
+      - socnet
+
+networks:
+  socnet:
+    driver: bridge
+
+volumes:
+  wazuh-indexer-data:
+  wazuh-manager-data:
+  wazuh-manager-logs:
