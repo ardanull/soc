@@ -1,4 +1,4 @@
-# SOC-in-a-Box (İleri) — Purple Team Lab
+# SOC-in-a-Box
 
 Bu proje, Docker Compose ile tek makinede çalışan bir Wazuh tabanlı XDR+SIEM kurulumu ve iki hedef sistem (SSH ve Web) üzerinde saldırı simülasyonları, tespit kuralları ve IR playbook içerir.
 
